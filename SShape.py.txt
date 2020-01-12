@@ -1,0 +1,74 @@
+import encoders
+import servos
+import time
+import RPi.GPIO as GPIO
+import signal
+import math
+
+#objects for servos, encoders, sensors, and camera
+enc = encoders.Encoders()
+serv = servos.Servos()
+# Pins that the encoders are connected to
+LENCODER = 17
+RENCODER = 18
+
+def ctrlC(signum, frame):
+    print("Exiting")
+    serv.stopServos()
+    GPIO.cleanup()
+    exit()
+
+# Attach the Ctrl+C signal interrupt
+signal.signal(signal.SIGINT, ctrlC)
+    
+# Set the pin numbering scheme to the numbering shown on the robot itself.
+GPIO.setmode(GPIO.BCM)
+
+# Set encoder pins as input
+# Also enable pull-up resistors on the encoder pins
+# This ensures a clean 0V and 3.3V is always outputted from the encoders.
+GPIO.setup(LENCODER, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(RENCODER, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+# Attach a rising edge interrupt to the encoder pins
+GPIO.add_event_detect(LENCODER, GPIO.RISING, enc.onLeftEncode)
+GPIO.add_event_detect(RENCODER, GPIO.RISING, enc.onRightEncode)
+
+radius1 = input("Please input R1 (in inches): ")
+radius2 = input("Please input R2 (in inches): ")
+seconds = input("Please input Y (in seconds): ")
+
+circumR1 = (2 * math.pi * radius1)/2 # distance to travel for R1's path in inches
+circumR2 = (2 * math.pi * radius2)/2 # distance to travel for R2's path in inches
+totalSpeed = (circumR1 + circumR2)/seconds # consistent speed in inches per second
+
+angVel1 = totalSpeed/radius1 #angular velocity of R1
+angVel2 = totalSpeed/radius2 #angular velocity of R2
+
+serv.setSpeedsvw(totalSpeed, angVel1) #how to slow down one wheel to get right size semicirle?
+
+speedTuple = enc.getSpeeds()
+DistanceWheel1 = (speedTuple[0] * 8.09)/(seconds/2) 
+# revolutions per second times inches per revolution divide by half of the total time
+
+if DistanceWheel1 >= circumR1:
+     serv.setSpeedsvw(0, 0)
+     
+continue = input("Press y to continue, or ctrl-C to cancel: ")
+
+while continue != 'y':
+  None
+  
+serv.setSpeedsvw(totalSpeed, angVel2) #how to slow down one wheel to get right size semicirle?
+
+speedTuple = enc.getSpeeds()
+DistanceWheel2 = (speedTuple[1] * 8.09)/(seconds/2) 
+# revolutions per second times inches per revolution divide by half of the total time
+
+if DistanceWheel2 >= circumR2:
+     serv.setSpeedsvw(0, 0)
+     
+print("Task complete!")
+
+while True:
+    time.sleep(5)

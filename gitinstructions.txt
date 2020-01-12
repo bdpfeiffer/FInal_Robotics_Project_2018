@@ -1,0 +1,16 @@
+///////Making and checkout new branch
+git checkout -b 'newbranchname'
+
+///////Saving your changes to git
+git add . (staging)
+git -c user.name='zellipsoid' -c user.email='zach44zach@gmail.org' commit -m 'YOURTESTMESSAGE' (committing)
+git push origin zach (pushing)
+>>then put in your info
+
+///////Merging into master
+git checkout master
+git merge BRANCHNAME
+
+///////Other git stuff
+git status
+git pull origin BRANCHNAME
